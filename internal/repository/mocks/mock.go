@@ -49,17 +49,17 @@ func (mr *MockEncoderMockRecorder) IfExistsBase63(url interface{}) *gomock.Call 
 }
 
 // SaveBase63 mocks base method.
-func (m *MockEncoder) SaveBase63(url string, id int64) error {
+func (m *MockEncoder) SaveBase63(url string, id int64, counter *int) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "SaveBase63", url, id)
+	ret := m.ctrl.Call(m, "SaveBase63", url, id, counter)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // SaveBase63 indicates an expected call of SaveBase63.
-func (mr *MockEncoderMockRecorder) SaveBase63(url, id interface{}) *gomock.Call {
+func (mr *MockEncoderMockRecorder) SaveBase63(url, id, counter interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveBase63", reflect.TypeOf((*MockEncoder)(nil).SaveBase63), url, id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SaveBase63", reflect.TypeOf((*MockEncoder)(nil).SaveBase63), url, id, counter)
 }
 
 // MockDecoder is a mock of Decoder interface.

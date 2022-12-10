@@ -32,17 +32,22 @@ func (s *EncoderService) Base63(urlString string) (string, error) {
 		return base63Encode(id), nil
 	}
 
+	counter := 0
 	for {
 		id = rand.Int63n(Base63TenMaxId + 1)
-		err := s.repo.SaveBase63(urlString, id)
+		err := s.repo.SaveBase63(urlString, id, &counter)
 		// might need wrapper for logging
 		if err != nil {
+			if errors.Is(err, repository.ErrOutOfUniqueValues) {
+				return "", &ServiceError{Msg: "server is out of unique values", StatusCode: http.StatusInternalServerError}
+			}
 			if !errors.Is(err, repository.ErrDuplicateId) {
 				return "", &ServiceError{Msg: err.Error(), StatusCode: http.StatusInternalServerError}
 			}
 		} else {
 			break
 		}
+		counter++
 	}
 
 	return base63Encode(id), nil

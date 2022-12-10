@@ -7,6 +7,10 @@ import (
 )
 
 // go:generate mockgen -source=repository.go -destination=mocks/mock.go
+const (
+	TRIES_LIMIT              = 1000
+	MAX_NUMBER_OF_ROWS int64 = 984930291881790848 - 10000000000000000 //63^10-1 - ~5%
+)
 
 var (
 	ErrOutOfUniqueValues = errors.New("out of uniqie values")
@@ -15,7 +19,7 @@ var (
 )
 
 type Encoder interface {
-	SaveBase63(url string, id int64) error
+	SaveBase63(url string, id int64, counter *int) error
 	IfExistsBase63(url string) (int64, error)
 }
 

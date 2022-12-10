@@ -17,7 +17,27 @@ func NewEncoderPostgres(db *sqlx.DB) *EncoderPostgres {
 	return &EncoderPostgres{db: db}
 }
 
-func (r *EncoderPostgres) SaveBase63(url string, id int64) error {
+func (r *EncoderPostgres) checkTryLimits(counter *int) error {
+	if *counter > TRIES_LIMIT {
+		var numberOFIds int64
+		row := r.db.QueryRow("SELECT count(*) AS exact_count FROM %s", database.Base63Table)
+		if err := row.Scan(&numberOFIds); err != nil {
+			return err
+		}
+		if numberOFIds > MAX_NUMBER_OF_ROWS {
+			return ErrOutOfUniqueValues
+		} else {
+			*counter = 0
+		}
+	}
+
+	return nil
+}
+
+func (r *EncoderPostgres) SaveBase63(url string, id int64, counter *int) error {
+	if err := r.checkTryLimits(counter); err != nil {
+		return err
+	}
 	query := fmt.Sprintf("INSERT INTO %s (id, url) values ($1, $2) RETURNING id", database.Base63Table)
 	row := r.db.QueryRow(query, id, url)
 	if err := row.Scan(&id); err != nil {

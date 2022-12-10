@@ -15,7 +15,27 @@ func NewEncoderRedis(rdb *redis.Client) *EncoderRedis {
 	return &EncoderRedis{rdb: rdb}
 }
 
-func (r *EncoderRedis) SaveBase63(url string, id int64) error {
+func (r *EncoderRedis) checkTryLimits(counter *int) error {
+	if *counter > TRIES_LIMIT {
+		numOfKeys := r.rdb.DBSize(context.TODO())
+		if numOfKeys.Err() != nil {
+			return numOfKeys.Err()
+		}
+		if numOfKeys.Val() > MAX_NUMBER_OF_ROWS*2 {
+			return ErrOutOfUniqueValues
+		} else {
+			*counter = 0
+		}
+	}
+
+	return nil
+}
+
+func (r *EncoderRedis) SaveBase63(url string, id int64, counter *int) error {
+	if err := r.checkTryLimits(counter); err != nil {
+		return err
+	}
+
 	idString := strconv.FormatInt(id, 10)
 
 	// does the key exist
@@ -29,24 +49,25 @@ func (r *EncoderRedis) SaveBase63(url string, id int64) error {
 		return ErrDuplicateId
 	}
 
-	// if not, write to db
-	res := r.rdb.Set(context.TODO(), idString, url, 0)
-	if res.Err() != nil {
-		return res.Err()
+	txf := func(tx *redis.Tx) error {
+		_, err := tx.TxPipelined(context.TODO(), func(pipe redis.Pipeliner) error {
+			pipe.Set(context.TODO(), idString, url, 0)
+			return nil
+		})
+		return err
 	}
 
-	// check if no data race were made
-	check := r.rdb.Get(context.TODO(), idString)
-	if check.Err() != nil {
-		return check.Err()
+	// add new id key
+	if err := r.rdb.Watch(context.TODO(), txf, idString); err != nil {
+		if err == redis.TxFailedErr {
+			return ErrDuplicateId
+		} else {
+			return err
+		}
 	}
 
-	// if there was a data race, generate a new id
-	if check.Val() != url {
-		return ErrDuplicateId
-	}
-
-	res = r.rdb.Set(context.TODO(), url, idString, 0)
+	// add new url key
+	res := r.rdb.Set(context.TODO(), url, idString, 0)
 	if res.Err() != nil {
 		r.rdb.Del(context.TODO(), idString)
 		return res.Err()
