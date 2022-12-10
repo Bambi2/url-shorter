@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,7 +13,6 @@ import (
 	"github.com/bambi2/url-shorter/internal/repository"
 	"github.com/bambi2/url-shorter/internal/server"
 	"github.com/bambi2/url-shorter/internal/service"
-	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -22,10 +20,6 @@ import (
 func main() {
 	if err := config.InitConfig(); err != nil {
 		logrus.Fatalf("error initializing configs: %s\n", err.Error())
-	}
-
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("error loading env variables: %s\n", err.Error())
 	}
 
 	db, err := database.NewDatabase(os.Getenv("DB_TYPE"))

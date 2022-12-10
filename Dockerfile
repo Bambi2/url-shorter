@@ -15,4 +15,4 @@ RUN chmod +x wait-for-postgres.sh
 RUN go mod download
 RUN go build -o url-shorter ./cmd/main.go
 
-CMD ["./balance-app"]
+CMD ["./url-shorter"]
