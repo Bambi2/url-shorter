@@ -1,0 +1,4 @@
+CREATE TABLE base63 (
+	id BIGINT PRIMARY KEY,
+	url TEXT
+);
