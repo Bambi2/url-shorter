@@ -6,6 +6,8 @@ import (
 	"github.com/bambi2/url-shorter/internal/database"
 )
 
+// go:generate mockgen -source=repository.go -destination=mocks/mock.go
+
 var (
 	ErrOutOfUniqueValues = errors.New("out of uniqie values")
 	ErrDuplicateId       = errors.New("such id already exists")
@@ -14,6 +16,7 @@ var (
 
 type Encoder interface {
 	SaveBase63(url string, id int64) error
+	IfExistsBase63(url string) (int64, error)
 }
 
 type Decoder interface {

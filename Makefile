@@ -9,3 +9,6 @@ postgres-run:
 
 redis-run:
 	docker run --name url-shorter-redis -p 6379:6379 -d --rm redis
+
+test:
+	go test -v ./...

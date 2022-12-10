@@ -24,7 +24,14 @@ func (s *EncoderService) Base63(urlString string) (string, error) {
 		return "", &ServiceError{Msg: "invalid url: " + urlString, StatusCode: http.StatusBadRequest}
 	}
 
-	var id int64
+	id, err := s.repo.IfExistsBase63(urlString)
+	if err != nil {
+		return "", &ServiceError{Msg: err.Error(), StatusCode: http.StatusInternalServerError}
+	}
+	if id != -1 {
+		return base63Encode(id), nil
+	}
+
 	for {
 		id = rand.Int63n(Base63TenMaxId + 1)
 		err := s.repo.SaveBase63(urlString, id)

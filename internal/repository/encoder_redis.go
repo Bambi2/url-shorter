@@ -46,5 +46,28 @@ func (r *EncoderRedis) SaveBase63(url string, id int64) error {
 		return ErrDuplicateId
 	}
 
+	res = r.rdb.Set(context.TODO(), url, idString, 0)
+	if res.Err() != nil {
+		r.rdb.Del(context.TODO(), idString)
+		return res.Err()
+	}
+
 	return nil
+}
+
+func (r *EncoderRedis) IfExistsBase63(url string) (int64, error) {
+	result := r.rdb.Get(context.TODO(), url)
+	if result.Err() != nil {
+		if result.Err() == redis.Nil {
+			return -1, nil
+		}
+		return -1, result.Err()
+	}
+
+	id, err := strconv.ParseInt(result.Val(), 10, 64)
+	if err != nil {
+		return -1, err
+	}
+
+	return id, nil
 }

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/bambi2/url-shorter/internal/database"
@@ -29,4 +30,19 @@ func (r *EncoderPostgres) SaveBase63(url string, id int64) error {
 	}
 
 	return nil
+}
+
+func (r *EncoderPostgres) IfExistsBase63(url string) (int64, error) {
+	var id int64
+	query := fmt.Sprintf("SELECT id FROM %s WHERE url=$1", database.Base63Table)
+	row := r.db.QueryRow(query, url)
+	if err := row.Scan(&id); err != nil {
+		if err == sql.ErrNoRows {
+			return -1, nil
+		} else {
+			return -1, err
+		}
+	}
+
+	return id, nil
 }
